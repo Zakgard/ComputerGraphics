@@ -77,6 +77,6 @@ static std::map<std::string, DirectX::XMFLOAT4> COLORS
 	{ "Black", { 0.0f, 0.0f, 0.0f, 1.0f} }
 };
 
-constexpr DirectX::XMFLOAT4 BALL_START_POS{ 0.1f, 0.1f , 0.1f , 0.1f };
+const DirectX::XMFLOAT4 BALL_START_POS{ 0.1f, 0.1f , 0.1f , 0.1f };
 constexpr int FRAMES_PER_SECOND = 60;
 constexpr double UPDATE_DELAY = 1.0 / FRAMES_PER_SECOND;

@@ -4,8 +4,8 @@
 int main()
 {
 	auto game = Game();
-	game.Initialize(LABARATORY_MODE::Pong);
-	game.PrepareResources(1);
+	game.Initialize(LABARATORY_MODE::Architecture);
+	game.PrepareResources(10);
 	game.Run();
 	return 0;
 }

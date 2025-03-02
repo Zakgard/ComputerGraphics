@@ -2,16 +2,13 @@
 
 #include <cstring>
 #include <DirectXMath.h>
+#include "DirectXCollision.h"
 
 using namespace DirectX;
 
-bool msh_IsStatic = false;
-
-struct ConstData
-{
-	XMFLOAT4 offset;
-	XMFLOAT4 color;
-	XMFLOAT4 pos;
+struct ConstantBuffer {
+	float width;
+	float height;
 };
 
 MeshComponentConstantBuffer::MeshComponentConstantBuffer() noexcept
@@ -25,9 +22,13 @@ MeshComponentConstantBuffer::MeshComponentConstantBuffer(const Game* game) noexc
 }
 
 
-void MeshComponentConstantBuffer::Initialize(ID3D11VertexShader* const vSh, ID3D11PixelShader* const pSh, DirectX::XMFLOAT4 basePoints[], ID3DBlob* pixelBC, ID3DBlob* vertexBC, bool IsStatic) noexcept
+void MeshComponentConstantBuffer::Initialize(ID3D11VertexShader* const vSh, ID3D11PixelShader* const pSh, DirectX::XMFLOAT4 basePoints[], ID3DBlob* pixelBC, ID3DBlob* vertexBC, bool IsStatic, uint16_t iD) noexcept
 {
 	msh_IsStatic = IsStatic;
+	msh_UseCollider = !IsStatic;
+	m_Id = iD;
+	//msh_Pos.x = basePoints[0].x;
+
 	msh_VertexShader = vSh;
 	msh_PixelShader = pSh;
 	msh_Points = basePoints;
@@ -74,7 +75,7 @@ void MeshComponentConstantBuffer::Initialize(ID3D11VertexShader* const vSh, ID3D
 	constBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	constBufDesc.MiscFlags = 0;
 	constBufDesc.StructureByteStride = 0;
-	constBufDesc.ByteWidth = sizeof(ConstData);
+	constBufDesc.ByteWidth = sizeof(ConstantBuffer);
 
 	m_game->g_Device->CreateBuffer(&constBufDesc, nullptr, &m_ConstantBuffer);
 
@@ -105,7 +106,8 @@ void MeshComponentConstantBuffer::Initialize(ID3D11VertexShader* const vSh, ID3D
 		&msh_Layout
 	);
 
-	msh_Pos = BALL_START_POS;
+	msh_CenterPos.x = basePoints[1].x - basePoints[0].x;
+	msh_CenterPos.y = basePoints[2].y - basePoints[0].y;
 }
 
 void MeshComponentConstantBuffer::DestroyComponentDesources() noexcept
@@ -115,20 +117,14 @@ void MeshComponentConstantBuffer::DestroyComponentDesources() noexcept
 
 void MeshComponentConstantBuffer::Update(XMFLOAT4 color) noexcept
 {
-	const ConstData constData{ msh_Pos, color, {0,0,0,0} };
+	/*const ConstantBuffer constData{msh_Pos, color, {0,0,0,0}};
 	D3D11_MAPPED_SUBRESOURCE res = {};
-
-	float left = -10.0f, right = 10.0f;
-	float bottom = -10.0f, top = 10.0f;
-	float nearPlane = 0.0f, farPlane = 100.0f;
-
-	DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixOrthographicOffCenterLH(left, right, bottom, top, nearPlane, farPlane);
 
 	m_game->g_Context->Map(m_ConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
 
 	auto dataPtr = reinterpret_cast<float*>(res.pData);
 
-	memcpy(dataPtr, &constData, sizeof(ConstData));
+	memcpy(dataPtr, &constData, sizeof(ConstantBuffer));
 
 	m_game->g_Context->Unmap(m_ConstantBuffer, 0);
 	m_game->g_Context->VSSetConstantBuffers(0, 1, &m_ConstantBuffer);
@@ -146,7 +142,7 @@ void MeshComponentConstantBuffer::Update(XMFLOAT4 color) noexcept
 
 	m_game->g_Context->PSSetShader(msh_PixelShader, nullptr, 0);
 
-	m_game->g_Context->DrawIndexed(6, 0, 0);
+	m_game->g_Context->DrawIndexed(6, 0, 0);*/
 }
 
 MeshComponentConstantBuffer* MeshComponentConstantBuffer::GetMeshComponent() noexcept
@@ -156,15 +152,33 @@ MeshComponentConstantBuffer* MeshComponentConstantBuffer::GetMeshComponent() noe
 
 void MeshComponentConstantBuffer::FixedUpdate(XMFLOAT4 offset) noexcept
 {
-	if (msh_IsStatic)
+	if (!msh_IsStatic)
 	{
-		return;
+		msh_Pos.x += offset.x;
+		msh_Pos.y += offset.y;
+		msh_CenterPos.x += offset.x;
+		msh_CenterPos.y += offset.y;
+		//msh_Pos.w += offset.w;
+		//msh_Pos.z += offset.z;
 	}
 
-	msh_Pos.x += offset.x;
-	msh_Pos.y += offset.y;
-	//msh_Pos.w += offset.w;
-	msh_Pos.z += offset.z;
+	if (msh_UseCollider)
+	{
+		msh_PosCollider = XMFLOAT3{
+			msh_Pos.x,
+			msh_Pos.y,
+			0
+		};
+
+		msh_Box.Center = msh_CenterPos;
+		std::cout << msh_CenterPos.x  << " id " << m_Id << std::endl;
+		msh_Box.Extents = XMFLOAT3{
+			0.01f,
+			0.01f,
+			0.0f
+		};
+	}
+//	if(msh_Box.Intersects())
 }
 
 XMFLOAT4 MeshComponentConstantBuffer::GetCurrentPos() noexcept

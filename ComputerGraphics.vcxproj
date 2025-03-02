@@ -129,6 +129,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Circe.cpp" />
     <ClCompile Include="ComputerGraphics.cpp" />
     <ClCompile Include="DisplayWin32.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -160,6 +161,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Circe.h" />
     <ClInclude Include="DebugHelper.h" />
     <ClInclude Include="DisplayWin32.h" />
     <ClInclude Include="Game.h" />

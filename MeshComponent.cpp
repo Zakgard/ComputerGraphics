@@ -81,6 +81,7 @@ void MeshComponent::Initialize(ID3D11VertexShader* const vSh, ID3D11PixelShader*
 		0,
 		D3D11_INPUT_PER_VERTEX_DATA,
 		0},
+
 	D3D11_INPUT_ELEMENT_DESC {
 		"COLOR",
 		0,

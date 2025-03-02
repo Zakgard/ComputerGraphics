@@ -20,3 +20,5 @@ DirectX::XMFLOAT4 PLAYERS_START_POINTS[4] = {
         DirectX::XMFLOAT4(-0.95f, 0.6f, 0.0f, 0.0f),	    DirectX::XMFLOAT4(-0.85f, 0.6f, 0.0f, 0.0f),
         DirectX::XMFLOAT4(-0.85f, 0.8f, 0.0f, 0.0f),     DirectX::XMFLOAT4(-0.95f, 0.8f, 0.0f, 0.0f),
 };
+
+constexpr float PLAYER_MOVE_SPEED = 0.1f;

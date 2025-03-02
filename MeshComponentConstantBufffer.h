@@ -16,9 +16,12 @@ public:
 	void Update(XMFLOAT4 color) noexcept;
 	void FixedUpdate(XMFLOAT4 offset) noexcept;
 	XMFLOAT4 GetCurrentPos() noexcept;
-	void Initialize(ID3D11VertexShader* const vSh, ID3D11PixelShader* const pSh, DirectX::XMFLOAT4 basePoints[], ID3DBlob* pixelBC, ID3DBlob* vertexBC, bool IsStatic) noexcept;
+	void Initialize(ID3D11VertexShader* const vSh, ID3D11PixelShader* const pSh, DirectX::XMFLOAT4 basePoints[], ID3DBlob* pixelBC, ID3DBlob* vertexBC, bool IsStatic, uint16_t iD) noexcept;
 	MeshComponentConstantBuffer* GetMeshComponent() noexcept;
 	virtual void DestroyComponentDesources() noexcept override;
+	BoundingBox msh_Box;
+	XMFLOAT3 msh_PosCollider;
+	bool msh_UseCollider;
 private:
 	ID3D11InputLayout* msh_Layout;
 	ID3D11PixelShader* msh_PixelShader;
@@ -31,8 +34,10 @@ private:
 
 	XMFLOAT4* msh_Points;
 	XMFLOAT4 msh_Pos;
+	XMFLOAT3 msh_CenterPos;
 
 	const Game* m_game;
+	uint16_t m_Id;
 
 	ID3D11Buffer* m_Indexbuffer;
 	ID3D11Buffer* m_ConstantBuffer;
@@ -40,4 +45,5 @@ private:
 
 	UINT* msh_Strides;
 	UINT* msh_Offsets;
+	bool msh_IsStatic;
 };

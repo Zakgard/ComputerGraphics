@@ -9,7 +9,8 @@ void ShaderManager::CompileShaders(vector<string>& pathes)
 	if (pathes.size() < 1) return;
 	string ext(".hlsl");
 
-	D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(0.0f, 1.0f, 0.0f, 1.0f)", nullptr, nullptr };
+	//D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(1.0f, 1.0f, 1.0f, 1.0f)", nullptr, nullptr };
+	//D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "SV_POSITION", "float4(1.0f, 1.0f, 1.0f, 1.0f)", nullptr, nullptr };
 
 	for (const auto& path : pathes)
 	{
@@ -24,7 +25,7 @@ void ShaderManager::CompileShaders(vector<string>& pathes)
 				sh_ErrorVertexBC.push_back(nullptr);
 				
 				D3DCompileFromFile(entry.path().c_str(),
-					Shader_Macros,
+					nullptr,
 					nullptr,
 					"PSMain", "ps_5_0",
 					D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,

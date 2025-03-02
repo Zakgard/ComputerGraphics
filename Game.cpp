@@ -1,9 +1,12 @@
 #include "Game.h"
+#include "Circe.h"
 #include "MeshComponent.h"
 #include "MeshComponentConstantBufffer.h"
 #include "Labaratory_one_params.h"
 #include "Lab2Params.h"
 
+static uint16_t counter = 0;
+std::vector<Circe*> circles;
 std::vector<MeshComponent*> components;
 std::vector<MeshComponentConstantBuffer*> constComponents;
 std::chrono::time_point<std::chrono::steady_clock> prevTime;
@@ -120,6 +123,26 @@ void Game::Initialize(uint32_t mode) noexcept
     );
 }
 
+
+std::vector<XMFLOAT4> DrawCircle()
+{
+    std::vector<XMFLOAT4> vertices;
+
+    float angleStep = 1.0f / 360;
+
+    for (uint16_t i = 0; i < 360; ++i)
+    {
+        float angle = angleStep * i;
+
+        float x = 360 * cos(angle);
+        float y = 360 * sin(angle);
+
+        vertices.push_back(XMFLOAT4(x, y, 0.0f, 1.0f));
+    }
+
+    return vertices;
+}
+
 void Game::PrepareResources(uint32_t objectsAmount) noexcept
 {
     auto res = g_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backTex);	// __uuidof(ID3D11Texture2D)
@@ -128,7 +151,7 @@ void Game::PrepareResources(uint32_t objectsAmount) noexcept
 
     CD3D11_RASTERIZER_DESC rastDesc = {};
     rastDesc.CullMode = D3D11_CULL_NONE;
-    rastDesc.FillMode = D3D11_FILL_SOLID;
+    rastDesc.FillMode = D3D11_FILL_SOLID  /*D3D11_FILL_WIREFRAME*/;
 
     g_Device->CreateRasterizerState(&rastDesc, &g_RastState);
 
@@ -175,7 +198,28 @@ void Game::PrepareResources(uint32_t objectsAmount) noexcept
 
     DirectX::XMFLOAT4* points;
 
-    if (g_Mode == LABARATORY_MODE::Architecture) {
+    if (g_Mode == LABARATORY_MODE::Architecture)
+    {
+        std::vector<XMFLOAT4> circleVertices = DrawCircle();
+
+        // Здесь вы должны создать буфер вершин и загрузить в него circleVertices
+        // Затем выполнить отрисовку с использованием контекста Direct3D
+
+        // Пример кода для создания буфера вершин (не полный)
+
+        
+        const auto circle = new Circe(this, 0);
+        circles.push_back(circle);
+        UINT stride = sizeof(XMFLOAT4);
+        UINT offset = 0;
+       circles[0]->Initialize(g_VertexShaders[0], g_PixelShaders[0], strides, offsets, pixelBCs[0], vertexBCs[0], circleVertices);
+
+        // Установка буфера вершин
+        
+        // Освобождение ресурсов
+    }
+
+    if (g_Mode == 3) {
 
         DirectX::XMFLOAT4* points = OBJECT_POINTS;
 
@@ -199,7 +243,7 @@ void Game::PrepareResources(uint32_t objectsAmount) noexcept
 
         objectsExist = objectsAmount;
         }
-        else
+        else if(g_Mode == 2)
         {
             DirectX::XMFLOAT4* points = DOT_POINTS;
             for (uint16_t i = 0; i < QUADS_IN_GRID; i++)
@@ -210,24 +254,33 @@ void Game::PrepareResources(uint32_t objectsAmount) noexcept
                 points[3].y += QUADS_IN_GRID_POS_OFFSET;
 
                 auto component = new MeshComponentConstantBuffer(this);
+                component->Initialize(g_VertexShaders[1], g_PixelShaders[1], points, pixelBCs[1], vertexBCs[1], true, counter);
                 constComponents.push_back(component);
-                constComponents[i]->Initialize(g_VertexShaders[1], g_PixelShaders[1], points, pixelBCs[1], vertexBCs[1], true);
+                counter++;
             }
 
             points = PLAYERS_START_POINTS;
             for (uint16_t i = 0; i < 2; i++)
             {
-                auto component = new MeshComponentConstantBuffer(this);
+                auto component = new MeshComponentConstantBuffer(this);           
+                component->Initialize(g_VertexShaders[1], g_PixelShaders[1], points, pixelBCs[1], vertexBCs[1], false, counter);
                 constComponents.push_back(component);
-                constComponents[i+QUADS_IN_GRID]->Initialize(g_VertexShaders[1], g_PixelShaders[1], points, pixelBCs[1], vertexBCs[1], true);
 
                 points[0].x += PLAYER_POS_OFFSET;
                 points[1].x += PLAYER_POS_OFFSET;
                 points[2].x += PLAYER_POS_OFFSET;
                 points[3].x += PLAYER_POS_OFFSET;
+                counter++;
             }
-        }
+
+            points = SQUARE_POINTS;
+            auto component = new MeshComponentConstantBuffer(this);
+            component->Initialize(g_VertexShaders[1], g_PixelShaders[1], points, pixelBCs[1], vertexBCs[1], false, counter);
+            constComponents.push_back(component);
+            counter++;
+    }
 }
+
 
 void Game::PrepareFrames() const noexcept
 {
@@ -266,6 +319,13 @@ void Game::Draw() const noexcept
         component->Update(COLORS["White"]);
     }
 
+    for (const auto& component : circles)
+    {
+        std::cout << "Update" << std::endl;
+        g_Context->OMSetRenderTargets(1, &g_RenderTargetView, nullptr);
+        component->Update();
+    }
+
     //g_Context->OMSetRenderTargets(0, nullptr, nullptr);
     g_SwapChain->Present(1, DXGI_PRESENT_DO_NOT_WAIT);
 }
@@ -290,6 +350,17 @@ void Game::UpdateInternal() noexcept
     for (const auto& component : constComponents)
     {
        component->FixedUpdate({ 0.005f, 0.000f, 0.0f, 0.0f });
+
+       for (const auto& other : constComponents)
+       {
+           if (component->msh_UseCollider && other->msh_UseCollider && component != other)
+           {
+               if (component->msh_Box.Intersects(other->msh_Box))
+               {
+                   //std::cout << "collision!" << std::endl; 
+               }
+           }
+       }
     }
 }
 

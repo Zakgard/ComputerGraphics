@@ -38,6 +38,7 @@ public:
 	vector<ID3D11PixelShader*> g_PixelShaders;
 	ID3DBlob* bc;
 	ID3D11Texture2D* backTex = nullptr;
+	DisplayWin32* g_Intance;
 
 private:
 	void CreateBackBuffer() noexcept;
@@ -46,7 +47,7 @@ private:
 	D3D11_SUBRESOURCE_DATA g_Data;
 	bool g_IsContinue;
 	int g_FrameCount;
-	DisplayWin32* g_Intance;
+
 	uint16_t g_Mode;
 };
 
